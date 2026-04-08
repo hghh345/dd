@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>✨ Denim Disco Drip ✨</title>
+  <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=VT323&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink: #ff69b4;
+      --deep: #1a0033;
+      --mid: #2a004a;
+      --light-purple: #c9a0f0;
+      --gold: #ffd700;
+    }
+
+    body {
+      font-family: 'Boogaloo', sans-serif;
+      background: var(--deep);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── stars ── */
+    #stars {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+    }
+    .star {
+      position: absolute;
+      color: #fff;
+      font-size: 10px;
+      opacity: 0.3;
+      animation: twinkle 2.5s infinite alternate;
+    }
+    @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.6; } }
+
+    /* ── layout ── */
+    #wrap {
+      position: relative; z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'VT323', monospace;
+      font-size: clamp(28px, 6vw, 52px);
+      color: var(--pink);
+      text-shadow: 0 0 12px var(--pink), 3px 3px 0 #800040;
+      letter-spacing: 3px;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--light-purple);
+      margin-top: 4px;
+    }
+
+    #main {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    /* ── wardrobe panel ── */
+    #wardrobe {
+      width: 160px;
+      flex-shrink: 0;
+    }
+
+    .cat-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .cat-tab {
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #ff69b455;
+      background: var(--mid);
+      color: var(--light-purple);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .cat-tab:hover, .cat-tab.active {
+      background: var(--pink);
+      color: var(--deep);
+      border-color: var(--pink);
+    }
+
+    .item-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+
+    .item-thumb {
+      background: var(--mid);
+      border: 1px solid #ff69b433;
+      border-radius: 10px;
+      padding: 6px;
+      cursor: grab;
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    }
+
+    .item-thumb:hover {
+      background: #4a0080;
+      border-color: var(--pink);
+      transform: scale(1.04);
+    }
+
+    .item-thumb:active { cursor: grabbing; transform: scale(0.97); }
+
+    .item-thumb img {
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .item-lbl {
+      font-size: 9px;
+      color: var(--light-purple);
+      margin-top: 3px;
+      text-align: center;
+    }
+
+    .empty-cat {
+      grid-column: span 2;
+      font-family: 'VT323', monospace;
+      font-size: 13px;
+      color: #ffffff22;
+      text-align: center;
+      padding: 20px 8px;
+    }
+
+    /* ── stage ── */
+    #canvas-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #avatar-stage {
+      width: 260px;
+      height: 380px;
+      background: linear-gradient(160deg, #2d0050, #0d001a);
+      border: 2px solid var(--pink);
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 30px #ff69b455, inset 0 0 40px #00000055;
+      cursor: default;
+    }
+
+    .stage-hint {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'VT323', monospace;
+      font-size: 14px;
+      color: #ffffff18;
+      text-align: center;
+      line-height: 1.6;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .placed-item {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+      z-index: 2;
+    }
+
+    .placed-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      display: block;
+    }
+
+    .placed-item.selected {
+      outline: 2px dashed var(--gold);
+      border-radius: 4px;
+    }
+
+    .resize-handle {
+      position: absolute;
+      bottom: -6px; right: -6px;
+      width: 14px; height: 14px;
+      background: var(--gold);
+      border-radius: 50%;
+      cursor: se-resize;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 0 6px #ffd70088;
+    }
+
+    /* ── buttons ── */
+    #btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .action-btn {
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 2px solid;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+
+    .action-btn:hover { opacity: 0.85; }
+    .action-btn:active { transform: scale(0.95); }
+
+    .btn-undo  { background: #002233; color: #69c8ff; border-color: #69c8ff66; }
+    .btn-clear { background: #3a0000; color: #ff6b6b; border-color: #ff6b6b66; }
+    .btn-save  { background: #003300; color: #69ff82; border-color: #69ff8266; }
+
+    /* ── right panel ── */
+    #panel-right {
+      width: 110px;
+      flex-shrink: 0;
+    }
+
+    .r-label {
+      font-family: 'VT323', monospace;
+      font-size: 15px;
+      color: var(--gold);
+      border-bottom: 1px dashed #ffd70044;
+      padding-bottom: 3px;
+      margin-bottom: 6px;
+      margin-top: 12px;
+    }
+
+    .r-label:first-child { margin-top: 0; }
+
+    .bg-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .bg-opt {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid #ffffff1a;
+      cursor: pointer;
+      color: #fff;
+      background: transparent;
+      text-align: left;
+      font-family: 'Boogaloo', sans-serif;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .bg-opt:hover, .bg-opt.active { border-color: var(--gold); color: var(--gold); }
+
+    #layer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .layer-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--light-purple);
+      padding: 3px 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .layer-row:hover { background: var(--mid); }
+    .layer-row.active-layer { color: var(--gold); }
+
+    .layer-thumb {
+      width: 20px; height: 20px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .layer-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .layer-del {
+      color: #ff6b6b44;
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+      transition: color 0.1s;
+    }
+
+    .layer-del:hover { color: #ff6b6b; }
+
+    /* ── toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--pink);
+      color: var(--deep);
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      padding: 8px 22px;
+      border-radius: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    #toast.show { opacity: 1; }
+
+    /* ── responsive ── */
+    @media (max-width: 600px) {
+      #main { flex-direction: column; align-items: center; }
+      #wardrobe, #panel-right { width: 100%; }
+      .item-grid { grid-template-columns: repeat(4, 1fr); }
+      .cat-tabs { justify-content: center; }
+      #panel-right { display: flex; flex-wrap: wrap; gap: 16px; }
+      .bg-list { flex-direction: row; flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div id="wrap">
+  <header>
+    <h1>✨ DENIM DISCO DRIP ✨</h1>
+    <p class="subtitle">drag items onto the stage · select to move &amp; resize · delete key removes</p>
+  </header>
+
+  <div id="main">
+    <div id="wardrobe">
+      <div class="cat-tabs" id="cat-tabs"></div>
+      <div class="item-grid" id="item-grid"></div>
+    </div>
+
+    <div id="canvas-area">
+      <div id="avatar-stage">
+        <div class="stage-hint">drag ur fits<br>onto the stage ✨</div>
+      </div>
+      <div id="btn-row">
+        <button class="action-btn btn-undo"  onclick="undo()">↩ undo</button>
+        <button class="action-btn btn-clear" onclick="clearAll()">✕ clear</button>
+        <button class="action-btn btn-save"  onclick="saveImg()">💾 save look</button>
+      </div>
+    </div>
+
+    <div id="panel-right">
+      <div class="r-label">🌈 background</div>
+      <div class="bg-list" id="bg-list"></div>
+      <div class="r-label">📋 layers</div>
+      <div id="layer-list"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BASE = 'https://hghh345.github.io/dd/assets';
+
+  const catalog = {
+    tops: [
+      { src: `${BASE}/tops/1.svg`, label: 'top 1' },
+      { src: `${BASE}/tops/2.svg`, label: 'top 2' },
+      { src: `${BASE}/tops/3.svg`, label: 'top 3' },
+      { src: `${BASE}/tops/4.svg`, label: 'top 4' },
+    ],
+    bottoms: [
+      { src: `${BASE}/bottoms/5.svg`, label: 'bottom 1' },
+      { src: `${BASE}/bottoms/6.svg`, label: 'bottom 2' },
+      { src: `${BASE}/bottoms/7.svg`, label: 'bottom 3' },
+      { src: `${BASE}/bottoms/8.svg`, label: 'bottom 4' },
+    ],
+    hair: [
+      { src: `${BASE}/hair/hair1.svg`, label: 'hair 1' },
+    ],
+    accessories: [
+      { src: `${BASE}/accessories/17.svg`, label: 'acc 1' },
+      { src: `${BASE}/accessories/18.svg`, label: 'acc 2' },
+      { src: `${BASE}/accessories/19.svg`, label: 'acc 3' },
+    ],
+    shoes: [],
+  };
+
+  const catIcons = { tops:'👕', bottoms:'👖', hair:'💇', accessories:'💍', shoes:'👠' };
+
+  const bgs = [
+    { label:'🌌 night',    style:'linear-gradient(160deg,#2d0050,#0d001a)', c0:'#2d0050', c1:'#0d001a' },
+    { label:'🩷 hot pink', style:'linear-gradient(160deg,#ff1493,#8b0057)', c0:'#ff1493', c1:'#8b0057' },
+    { label:'💙 denim',    style:'linear-gradient(160deg,#1a3a6b,#0a1a3a)', c0:'#1a3a6b', c1:'#0a1a3a' },
+    { label:'🖤 chrome',   style:'linear-gradient(160deg,#1a1a1a,#000)',    c0:'#1a1a1a', c1:'#000000' },
+    { label:'🌈 sunset',   style:'linear-gradient(160deg,#ff6b35,#ff1493)', c0:'#ff6b35', c1:'#ff1493' },
+  ];
+
+  let activeBg = bgs[0];
+  const stage = document.getElementById('avatar-stage');
+  let placedItems = [], selected = null, dragSrc = null, idCounter = 0;
+  let activeCategory = 'tops';
+
+  /* stars */
+  (function() {
+    const c = document.getElementById('stars');
+    for (let i = 0; i < 40; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.textContent = ['✦','✧','·','★','✶'][i % 5];
+      s.style.cssText = `left:${(i*2.5)%100}%;top:${(i*7.3)%100}%;animation-delay:${(i*0.09).toFixed(2)}s`;
+      c.appendChild(s);
+    }
+  })();
+
+  /* tabs */
+  function buildTabs() {
+    const el = document.getElementById('cat-tabs');
+    Object.keys(catalog).forEach(cat => {
+      const t = document.createElement('button');
+      t.className = 'cat-tab' + (cat === activeCategory ? ' active' : '');
+      t.textContent = catIcons[cat] + ' ' + cat;
+      t.onclick = () => {
+        activeCategory = cat;
+        document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+        t.classList.add('active');
+        renderGrid();
+      };
+      el.appendChild(t);
+    });
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('item-grid');
+    grid.innerHTML = '';
+    const items = catalog[activeCategory] || [];
+    if (!items.length) {
+      grid.innerHTML = `<div class="empty-cat">coming soon ✨</div>`;
+      return;
+    }
+    items.forEach(item => {
+      const thumb = document.createElement('div');
+      thumb.className = 'item-thumb';
+      thumb.draggable = true;
+      thumb.title = item.label;
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.alt = item.label;
+      const lbl = document.createElement('div');
+      lbl.className = 'item-lbl';
+      lbl.textContent = item.label;
+      thumb.appendChild(img);
+      thumb.appendChild(lbl);
+      thumb.addEventListener('dragstart', e => {
+        dragSrc = { src: item.src, label: item.label };
+        e.dataTransfer.effectAllowed = 'copy';
+      });
+      grid.appendChild(thumb);
+    });
+  }
+
+  /* backgrounds */
+  function buildBgs() {
+    const list = document.getElementById('bg-list');
+    bgs.forEach((bg, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'bg-opt' + (i === 0 ? ' active' : '');
+      btn.textContent = bg.label;
+      btn.onclick = () => {
+        activeBg = bg;
+        stage.style.background = bg.style;
+        document.querySelectorAll('.bg-opt').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      list.appendChild(btn);
+    });
+  }
+
+  /* place item */
+  function placeItem(src, label, x, y) {
+    const id = ++idCounter;
+    const size = 110;
+    const el = document.createElement('div');
+    el.className = 'placed-item';
+    el.dataset.id = id;
+    el.style.width  = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = Math.max(0, Math.min(x - size/2, 260 - size)) + 'px';
+    el.style.top  = Math.max(0, Math.min(y - size/2, 380 - size)) + 'px';
+
+    const img = document.createElement('img');
+    img.src = src; img.alt = label;
+    el.appendChild(img);
+
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    el.appendChild(handle);
+
+    let dragging = false, resizing = false;
+    let startX, startY, startL, startT, startW, startH;
+
+    el.addEventListener('mousedown', e => {
+      if (e.target === handle) return;
+      e.stopPropagation();
+      selectItem(el);
+      dragging = true;
+      startX = e.clientX; startY = e.clientY;
+      startL = parseInt(el.style.left) || 0;
+      startT = parseInt(el.style.top)  || 0;
+      const onMove = ev => {
+        if (!dragging) return;
+        el.style.left = Math.max(0, Math.min(startL + ev.clientX - startX, 260 - el.offsetWidth))  + 'px';
+        el.style.top  = Math.max(0, Math.min(startT + ev.clientY - startY, 380 - el.offsetHeight)) + 'px';
+      };
+      const onUp = () => { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    handle.addEventListener('mousedown', e => {
+      e.stopPropagation();
+      resizing = true;
+      startX = e.clientX; startY = e.clientY;
+      startW = el.offsetWidth; startH = el.offsetHeight;
+      const onMove = ev => {
+        if (!resizing) return;
+        el.style.width  = Math.max(40, startW + ev.clientX - startX) + 'px';
+        el.style.height = Math.max(40, startH + ev.clientY - startY) + 'px';
+      };
+      const onUp = () => { resizing = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+
+    stage.appendChild(el);
+    placedItems.push({ id, el, src, label });
+    selectItem(el);
+    updateLayers();
+  }
+
+  function selectItem(el) {
+    if (selected) {
+      selected.classList.remove('selected');
+      const h = selected.querySelector('.resize-handle');
+      if (h) h.style.display = 'none';
+    }
+    selected = el;
+    if (el) {
+      el.classList.add('selected');
+      const h = el.querySelector('.resize-handle');
+      if (h) h.style.display = 'block';
+    }
+    updateLayers();
+  }
+
+  stage.addEventListener('click', e => {
+    if (e.target === stage || e.target.classList.contains('stage-hint')) selectItem(null);
+  });
+  stage.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  stage.addEventListener('drop', e => {
+    e.preventDefault();
+    if (!dragSrc) return;
+    const rect = stage.getBoundingClientRect();
+    placeItem(dragSrc.src, dragSrc.label, e.clientX - rect.left, e.clientY - rect.top);
+    dragSrc = null;
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) removeById(parseInt(selected.dataset.id));
+  });
+
+  function removeById(id) {
+    const idx = placedItems.findIndex(p => p.id === id);
+    if (idx === -1) return;
+    const { el } = placedItems[idx];
+    if (selected === el) selected = null;
+    el.remove();
+    placedItems.splice(idx, 1);
+    updateLayers();
+  }
+
+  function updateLayers() {
+    const list = document.getElementById('layer-list');
+    list.innerHTML = '';
+    [...placedItems].reverse().forEach(p => {
+      const row = document.createElement('div');
+      const isActive = selected && parseInt(selected.dataset.id) === p.id;
+      row.className = 'layer-row' + (isActive ? ' active-layer' : '');
+      const thumb = document.createElement('img');
+      thumb.className = 'layer-thumb'; thumb.src = p.src;
+      const name = document.createElement('span');
+      name.className = 'layer-name'; name.textContent = p.label;
+      const del = document.createElement('span');
+      del.className = 'layer-del'; del.textContent = '✕';
+      del.onclick = e => { e.stopPropagation(); removeById(p.id); };
+      row.appendChild(thumb); row.appendChild(name); row.appendChild(del);
+      row.onclick = () => selectItem(p.el);
+      list.appendChild(row);
+    });
+  }
+
+  function undo() {
+    if (!placedItems.length) return;
+    removeById(placedItems[placedItems.length - 1].id);
+  }
+
+  function clearAll() {
+    [...placedItems].forEach(p => p.el.remove());
+    placedItems = []; selected = null;
+    updateLayers();
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function saveImg() {
+    selectItem(null);
+    const sw = 260, sh = 380, scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = sw * scale; canvas.height = sh * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    const grad = ctx.createLinearGradient(0, 0, sw, sh);
+    grad.addColorStop(0, activeBg.c0);
+    grad.addColorStop(1, activeBg.c1);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, sw, sh);
+
+    const els = [...stage.querySelectorAll('.placed-item')];
+    if (!els.length) { doDownload(canvas); return; }
+
+    let done = 0;
+    els.forEach(el => {
+      const imgEl = el.querySelector('img');
+      const left = parseInt(el.style.left) || 0;
+      const top  = parseInt(el.style.top)  || 0;
+      const ew   = el.offsetWidth;
+      const eh   = el.offsetHeight;
+      const i = new Image();
+      i.crossOrigin = 'anonymous';
+      i.onload = () => {
+        ctx.drawImage(i, left, top, ew, eh);
+        if (++done === els.length) doDownload(canvas);
+      };
+      i.onerror = () => { if (++done === els.length) doDownload(canvas); };
+      i.src = imgEl.src + '?t=' + Date.now();
+    });
+  }
+
+  function doDownload(canvas) {
+    const link = document.createElement('a');
+    link.download = 'denim-disco-look.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('💾 look saved! check ur downloads ✨');
+  }
+
+  buildTabs();
+  renderGrid();
+  buildBgs();
+</script>
+</body>
+</html>
