@@ -65,6 +65,23 @@
       margin-top: 4px;
     }
 
+    /* touch drag ghost */
+    #touch-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.85;
+      display: none;
+      transform: translate(-50%, -50%);
+    }
+
+    #touch-ghost img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      display: block;
+    }
+
     #main {
       display: flex;
       gap: 14px;
@@ -394,6 +411,7 @@
 </div>
 
 <div id="toast"></div>
+<div id="touch-ghost"><img id="touch-ghost-img" src="" alt="" /></div>
 
 <script>
   const BASE = 'https://hghh345.github.io/dd/assets';
@@ -407,17 +425,17 @@
       { src: `${BASE}/tops/5.svg`, label: 'top 5' },
       { src: `${BASE}/tops/34.svg`, label: 'top 6' },
     ],
-      jackets: [
+    jackets: [
       { src: `${BASE}/jackets/38.svg`, label: 'jacket 1' },
       { src: `${BASE}/jackets/39.svg`, label: 'jacket 2' },
       { src: `${BASE}/jackets/40.svg`, label: 'jacket 3' },
     ],
-      jumpsuits: [
+    jumpsuits: [
       { src: `${BASE}/jumpsuits/41.svg`, label: 'jumpsuit 1' },
       { src: `${BASE}/jumpsuits/42.svg`, label: 'jumpsuit 2' },
       { src: `${BASE}/jumpsuits/43.svg`, label: 'jumpsuit 3' },
     ],
-     dresses: [
+    dresses: [
       { src: `${BASE}/dresses/28.svg`, label: 'dress 1' },
       { src: `${BASE}/dresses/29.svg`, label: 'dress 2' },
       { src: `${BASE}/dresses/30.svg`, label: 'dress 3' },
@@ -454,7 +472,7 @@
 
   const bgs = [
     { label:'🌌 night',    style:'linear-gradient(160deg,#2d0050,#0d001a)', c0:'#2d0050', c1:'#0d001a' },
-    { label:'💗 hot pink', style:'linear-gradient(160deg,#ff1493,#8b0057)', c0:'#ff1493', c1:'#8b0057' },
+    { label:'🩷 hot pink', style:'linear-gradient(160deg,#ff1493,#8b0057)', c0:'#ff1493', c1:'#8b0057' },
     { label:'💙 denim',    style:'linear-gradient(160deg,#1a3a6b,#0a1a3a)', c0:'#1a3a6b', c1:'#0a1a3a' },
     { label:'🖤 chrome',   style:'linear-gradient(160deg,#1a1a1a,#000)',    c0:'#1a1a1a', c1:'#000000' },
     { label:'🌈 sunset',   style:'linear-gradient(160deg,#ff6b35,#ff1493)', c0:'#ff6b35', c1:'#ff1493' },
@@ -515,10 +533,46 @@
       lbl.textContent = item.label;
       thumb.appendChild(img);
       thumb.appendChild(lbl);
+      // desktop drag
       thumb.addEventListener('dragstart', e => {
         dragSrc = { src: item.src, label: item.label };
         e.dataTransfer.effectAllowed = 'copy';
       });
+
+      // mobile touch
+      thumb.addEventListener('touchstart', e => {
+        e.preventDefault();
+        dragSrc = { src: item.src, label: item.label };
+        const ghost = document.getElementById('touch-ghost');
+        document.getElementById('touch-ghost-img').src = item.src;
+        ghost.style.display = 'block';
+        const t = e.touches[0];
+        ghost.style.left = t.clientX + 'px';
+        ghost.style.top  = t.clientY + 'px';
+      }, { passive: false });
+
+      thumb.addEventListener('touchmove', e => {
+        e.preventDefault();
+        const t = e.touches[0];
+        const ghost = document.getElementById('touch-ghost');
+        ghost.style.left = t.clientX + 'px';
+        ghost.style.top  = t.clientY + 'px';
+      }, { passive: false });
+
+      thumb.addEventListener('touchend', e => {
+        e.preventDefault();
+        document.getElementById('touch-ghost').style.display = 'none';
+        if (!dragSrc) return;
+        const t = e.changedTouches[0];
+        const stageRect = stage.getBoundingClientRect();
+        const x = t.clientX - stageRect.left;
+        const y = t.clientY - stageRect.top;
+        if (x >= 0 && x <= stageRect.width && y >= 0 && y <= stageRect.height) {
+          placeItem(dragSrc.src, dragSrc.label, x, y);
+        }
+        dragSrc = null;
+      }, { passive: false });
+
       grid.appendChild(thumb);
     });
   }
@@ -580,6 +634,42 @@
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     });
+
+    // touch move for placed items
+    el.addEventListener('touchstart', e => {
+      if (e.target === handle) return;
+      e.stopPropagation();
+      e.preventDefault();
+      selectItem(el);
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      startL = parseInt(el.style.left) || 0;
+      startT = parseInt(el.style.top)  || 0;
+    }, { passive: false });
+
+    el.addEventListener('touchmove', e => {
+      if (e.target === handle) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      el.style.left = Math.max(0, Math.min(startL + t.clientX - startX, 260 - el.offsetWidth))  + 'px';
+      el.style.top  = Math.max(0, Math.min(startT + t.clientY - startY, 380 - el.offsetHeight)) + 'px';
+    }, { passive: false });
+
+    // touch resize handle
+    handle.addEventListener('touchstart', e => {
+      e.stopPropagation();
+      e.preventDefault();
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      startW = el.offsetWidth; startH = el.offsetHeight;
+    }, { passive: false });
+
+    handle.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      el.style.width  = Math.max(40, startW + t.clientX - startX) + 'px';
+      el.style.height = Math.max(40, startH + t.clientY - startY) + 'px';
+    }, { passive: false });
 
     handle.addEventListener('mousedown', e => {
       e.stopPropagation();
