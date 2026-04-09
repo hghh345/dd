@@ -363,6 +363,77 @@
 
     #toast.show { opacity: 1; }
 
+    /* ── disco ball player ── */
+    #music-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      border: none;
+      background: conic-gradient(
+        #fff 0deg, #c0c0c0 20deg,
+        #888 40deg, #fff 60deg,
+        #ffd700 80deg, #c0c0c0 100deg,
+        #fff 120deg, #888 140deg,
+        #ff69b4 160deg, #fff 180deg,
+        #c0c0c0 200deg, #888 220deg,
+        #fff 240deg, #69c8ff 260deg,
+        #c0c0c0 280deg, #fff 300deg,
+        #888 320deg, #ffd700 340deg, #fff 360deg
+      );
+      cursor: pointer;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px #ffffff44;
+      transition: box-shadow 0.3s;
+    }
+
+    #music-btn.playing {
+      animation: spin-prism 2s linear infinite;
+      box-shadow: 0 0 24px #ffd700aa, 0 0 48px #ff69b466;
+    }
+
+    @keyframes spin-prism {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    #music-btn .pause-icon {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.45);
+      border-radius: 50%;
+      font-size: 20px;
+      color: #fff;
+    }
+
+    #music-btn:hover .pause-icon { display: flex; }
+
+    #music-label {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      font-family: 'VT323', monospace;
+      font-size: 12px;
+      color: var(--gold);
+      text-align: right;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      white-space: nowrap;
+      text-shadow: 0 0 8px #ffd70088;
+    }
+
+    #music-btn:hover ~ #music-label,
+    #music-label.show { opacity: 1; }
+
     /* ── responsive ── */
     @media (max-width: 600px) {
       #main { flex-direction: column; align-items: center; }
@@ -413,6 +484,15 @@
 <div id="toast"></div>
 <div id="touch-ghost"><img id="touch-ghost-img" src="" alt="" /></div>
 
+<audio id="disco-audio" loop>
+  <source src="https://hghh345.github.io/dd/assets/audio/You Sexy Thing - Hot Chocolate.mp3" type="audio/mpeg" />
+</audio>
+
+<button id="music-btn" onclick="toggleMusic()" title="Play / Pause">
+  <div class="pause-icon">⏸</div>
+</button>
+<div id="music-label">🎵 you sexy thing</div>
+
 <script>
   const BASE = 'https://hghh345.github.io/dd/assets';
 
@@ -448,7 +528,7 @@
       { src: `${BASE}/bottoms/31.svg`, label: 'bottom 5' },
       { src: `${BASE}/bottoms/32.svg`, label: 'bottom 6' },
       { src: `${BASE}/bottoms/33.svg`, label: 'bottom 7' },
-      { src: `${BASE}/bottoms/34.svg`, label: 'bottom 7' },
+      { src: `${BASE}/bottoms/34.svg`, label: 'bottom 8' },
     ],
     head: [
       { src: `${BASE}/hair/6.svg`, label: 'head 1' },
@@ -845,6 +925,26 @@
   buildTabs();
   renderGrid();
   buildBgs();
+
+  /* music */
+  const audio = document.getElementById('disco-audio');
+  const musicBtn = document.getElementById('music-btn');
+  const musicLabel = document.getElementById('music-label');
+  let playing = false;
+
+  function toggleMusic() {
+    if (playing) {
+      audio.pause();
+      musicBtn.classList.remove('playing');
+      musicLabel.classList.remove('show');
+    } else {
+      audio.play().catch(() => {});
+      musicBtn.classList.add('playing');
+      musicLabel.classList.add('show');
+      setTimeout(() => musicLabel.classList.remove('show'), 3000);
+    }
+    playing = !playing;
+  }
 </script>
 </body>
 </html>
