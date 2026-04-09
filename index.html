@@ -471,11 +471,11 @@
   const catIcons = { tops:'👕', jackets:'🧥', jumpsuits:'🕺🏾', dresses:'👗', bottoms:'👖', hair:'💇', accessories:'💍', shoes:'👠' };
 
   const bgs = [
-    { label:'🌌 night',    style:'linear-gradient(160deg,#2d0050,#0d001a)', c0:'#2d0050', c1:'#0d001a' },
-    { label:'💗 hot pink', style:'linear-gradient(160deg,#ff1493,#8b0057)', c0:'#ff1493', c1:'#8b0057' },
-    { label:'💙 denim',    style:'linear-gradient(160deg,#1a3a6b,#0a1a3a)', c0:'#1a3a6b', c1:'#0a1a3a' },
-    { label:'🖤 chrome',   style:'linear-gradient(160deg,#1a1a1a,#000)',    c0:'#1a1a1a', c1:'#000000' },
-    { label:'🌈 sunset',   style:'linear-gradient(160deg,#ff6b35,#ff1493)', c0:'#ff6b35', c1:'#ff1493' },
+    { label:'bg 1', img: `${BASE}/backgrounds/1.png` },
+    { label:'bg 2', img: `${BASE}/backgrounds/2.png` },
+    { label:'bg 3', img: `${BASE}/backgrounds/3.png` },
+    { label:'bg 4', img: `${BASE}/backgrounds/4.png` },
+    { label:'bg 5', img: `${BASE}/backgrounds/5.png` },
   ];
 
   let activeBg = bgs[0];
@@ -583,15 +583,23 @@
     bgs.forEach((bg, i) => {
       const btn = document.createElement('button');
       btn.className = 'bg-opt' + (i === 0 ? ' active' : '');
-      btn.textContent = bg.label;
+      btn.style.cssText = 'padding:0;border-radius:8px;overflow:hidden;border:2px solid transparent;cursor:pointer;display:block;width:100%;margin-bottom:4px;';
+      if (i === 0) btn.style.borderColor = 'var(--gold)';
+      const img = document.createElement('img');
+      img.src = bg.img;
+      img.alt = bg.label;
+      img.style.cssText = 'width:100%;height:48px;object-fit:cover;display:block;';
+      btn.appendChild(img);
       btn.onclick = () => {
         activeBg = bg;
-        stage.style.background = bg.style;
-        document.querySelectorAll('.bg-opt').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        stage.style.background = "url('" + bg.img + "') center/cover no-repeat";
+        document.querySelectorAll('.bg-opt').forEach(b => b.style.borderColor = 'transparent');
+        btn.style.borderColor = 'var(--gold)';
       };
       list.appendChild(btn);
     });
+    stage.style.background = "url('" + bgs[0].img + "') center/cover no-repeat";
+    activeBg = bgs[0];
   }
 
   /* place item */
@@ -778,31 +786,40 @@
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
 
-    const grad = ctx.createLinearGradient(0, 0, sw, sh);
-    grad.addColorStop(0, activeBg.c0);
-    grad.addColorStop(1, activeBg.c1);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, sw, sh);
-
     const els = [...stage.querySelectorAll('.placed-item')];
-    if (!els.length) { doDownload(canvas); return; }
 
-    let done = 0;
-    els.forEach(el => {
-      const imgEl = el.querySelector('img');
-      const left = parseInt(el.style.left) || 0;
-      const top  = parseInt(el.style.top)  || 0;
-      const ew   = el.offsetWidth;
-      const eh   = el.offsetHeight;
-      const i = new Image();
-      i.crossOrigin = 'anonymous';
-      i.onload = () => {
-        ctx.drawImage(i, left, top, ew, eh);
-        if (++done === els.length) doDownload(canvas);
-      };
-      i.onerror = () => { if (++done === els.length) doDownload(canvas); };
-      i.src = imgEl.src + '?t=' + Date.now();
-    });
+    function drawClothes() {
+      if (!els.length) { doDownload(canvas); return; }
+      let done = 0;
+      els.forEach(el => {
+        const imgEl = el.querySelector('img');
+        const left = parseInt(el.style.left) || 0;
+        const top  = parseInt(el.style.top)  || 0;
+        const ew   = el.offsetWidth;
+        const eh   = el.offsetHeight;
+        const i = new Image();
+        i.crossOrigin = 'anonymous';
+        i.onload = () => {
+          ctx.drawImage(i, left, top, ew, eh);
+          if (++done === els.length) doDownload(canvas);
+        };
+        i.onerror = () => { if (++done === els.length) doDownload(canvas); };
+        i.src = imgEl.src + '?t=' + Date.now();
+      });
+    }
+
+    const bgImg = new Image();
+    bgImg.crossOrigin = 'anonymous';
+    bgImg.onload = () => {
+      ctx.drawImage(bgImg, 0, 0, sw, sh);
+      drawClothes();
+    };
+    bgImg.onerror = () => {
+      ctx.fillStyle = '#1a0033';
+      ctx.fillRect(0, 0, sw, sh);
+      drawClothes();
+    };
+    bgImg.src = activeBg.img + '?t=' + Date.now();
   }
 
   function doDownload(canvas) {
