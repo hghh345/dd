@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>✨ Denim Disco Closet ✨</title>
+  <title>✨ The Denim Disco Closet ✨</title>
   <link href="https://fonts.googleapis.com/css2?family=Boogaloo&family=VT323&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -361,6 +361,39 @@
       white-space: nowrap;
     }
 
+    .event-info {
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .event-details {
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: #ffd700;
+      text-shadow: 1px 1px 0 #8b600088;
+      letter-spacing: 1px;
+    }
+
+    .ticket-btn {
+      font-family: 'VT323', monospace;
+      font-size: 15px;
+      padding: 5px 18px;
+      border-radius: 20px;
+      border: 2px solid #ffd700aa;
+      color: #1a0033;
+      background: #ffd700;
+      text-decoration: none;
+      letter-spacing: 1px;
+      transition: transform 0.1s, opacity 0.15s;
+      display: inline-block;
+    }
+
+    .ticket-btn:hover { opacity: 0.85; transform: scale(1.04); }
+    .ticket-btn:active { transform: scale(0.96); }
+
     #toast.show { opacity: 1; }
 
     /* ── disco ball player ── */
@@ -451,8 +484,12 @@
 
 <div id="wrap">
   <header>
-    <h1>✨ DENIM DISCO CLOSET ✨</h1>
+    <h1>✨ THE DENIM DISCO CLOSET ✨</h1>
     <p class="subtitle">drag items onto the stage · select to move &amp; resize · delete key removes</p>
+    <div class="event-info">
+      <p class="event-details">Denim Disco &nbsp;·&nbsp; April 17th, 2026 &nbsp;·&nbsp; Don't come if you won't dance</p>
+      <a class="ticket-btn" href="https://shotgun.live/events/denim-disco?utm_source=ddc" target="_blank" rel="noopener">🎟 get tickets</a>
+    </div>
   </header>
 
   <div id="main">
@@ -485,7 +522,7 @@
 <div id="touch-ghost"><img id="touch-ghost-img" src="" alt="" /></div>
 
 <audio id="disco-audio" loop>
-  <source src="https://hghh345.github.io/dd/assets/audio/You Sexy Thing - Hot Chocolate.mp3" type="audio/mpeg" />
+  <source src="https://hghh345.github.io/dd/assets/music/You%20Sexy%20Thing%20-%20Hot%20Chocolate.mp3" type="audio/mpeg" />
 </audio>
 
 <button id="music-btn" onclick="toggleMusic()" title="Play / Pause">
